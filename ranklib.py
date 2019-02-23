@@ -15,14 +15,26 @@ def has(qrels, qid, pid):
             return False
 
 
-def createDictionary(Qrels, runFile):
+def createDictionary(runFile):
+    ranker = dict()
     number_of_feature = len(runFiles)
     current_feature_number = 0
 
     for run in runFiles:
         with open(run, 'r') as f:
             for line in f:
-                print(line)
+                data = line.split(" ")
+                qid = data[0]
+                pid = data[2]
+                score = data[4]
+                if ranker.get(qid) is None:
+                    inner = dict()
+                    paralist = [x for x in range(0,number_of_feature)]
+                    paralist[current_feature_number]= score
+                    inner[pid] =paralist
+                    ranker[qid]= inner
+                else:
+                    pass
 
         current_feature_number = current_feature_number + 1
 
@@ -69,6 +81,7 @@ def createFrame():
 Read the file names in to list
 '''
 
+
 def readFileList(path):
     return [os.path.join(path, file) for file in os.listdir(path)]
 
@@ -93,4 +106,4 @@ if __name__ == '__main__':
         displayQrel(Qrel)
         displayFile(runFiles)
 
-createDictionary(Qrel, runFiles)
+    createDictionary(runFiles)
