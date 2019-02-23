@@ -69,7 +69,6 @@ def createFrame():
 Read the file names in to list
 '''
 
-
 def readFileList(path):
     return [os.path.join(path, file) for file in os.listdir(path)]
 
