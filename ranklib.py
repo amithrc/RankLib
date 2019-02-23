@@ -2,7 +2,8 @@ import argparse
 import sys
 import pandas as pd
 import os
-
+from scipy import stats
+import numpy as np
 
 def has(qrels, qid, pid):
     if qrels.get(qid) is None:
@@ -28,11 +29,11 @@ def createDictionary(runFile):
                 pid = data[2]
                 score = data[4]
                 if ranker.get(qid) is None:
+                    pidList = []
+                    scorelist = [x for x in range(0,number_of_feature)]
                     inner = dict()
-                    paralist = [x for x in range(0,number_of_feature)]
-                    paralist[current_feature_number]= score
-                    inner[pid] =paralist
-                    ranker[qid]= inner
+
+
                 else:
                     pass
 
@@ -43,6 +44,27 @@ def displayQrel(Qrel):
     for key, value in Qrel.items():
         for para in value:
             print(key, para)
+
+def zscoreNormalize(runFiles):
+
+    for file in runFiles:
+        print("\n")
+        with open(file,'r') as run:
+            scores = []
+            for line in run:
+                 data = line.split(" ")
+                 scores.append(data[4])
+
+
+            numpyarray = np.array(scores)
+            stats.zscore(numpyarray)
+            for i in numpyarray:
+                print(i)
+
+
+
+
+                # print(os.path.basename(files))
 
 
 def readQrel(qrelpath):
@@ -106,4 +128,5 @@ if __name__ == '__main__':
         displayQrel(Qrel)
         displayFile(runFiles)
 
-    createDictionary(runFiles)
+    #createDictionary(runFiles)
+    zscoreNormalize(runFiles)
