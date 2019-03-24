@@ -2,26 +2,43 @@ import argparse
 import sys
 import pandas as pd
 import os
-from scipy import stats
-import numpy as np
 
 
-def has(qrels, qid, pid):
-    if qrels.get(qid) is None:
-        return False
-    else:
-        paraList = qrels.get(qid)
-        if pid in paraList:
-            return True
+def is_relevant(qrel, qid, pid):
+    if qid in qrel:
+        para = qrel.get(qid)
+        if pid in para:
+            return 1
         else:
-            return False
+            return 0
+    else:
+        return 0
 
+
+def write_feature_file(qrel, ranker, fname_suffix="featurefile"):
+    fname = fname_suffix+".txt"
+    with open(fname, 'a') as fw:
+        qid_counter = 1
+        for qid, paradict in ranker.items():
+            print("Writing the feature for the Qid {}".format(qid))
+            for pid, score in paradict.items():
+                is_rel = is_relevant(qrel, qid, pid)
+                qid_val = "qid:{}".format(qid_counter)
+                sb=""
+                c=1
+                for score_val in score:
+                    sb+=str(c)+":"+str(score_val)
+                    sb+=" "
+                    c=c+1
+                info="#"+qid+"_"+pid
+                line=str(is_rel)+" "+qid_val+" "+sb+" "+info+"\n"
+                fw.write(line)
+            qid_counter=qid_counter+1
 
 '''
 Reads all the files in run files directory and put it in Dict
 dict<QID,dict<PID,[0.0 0.0 0.0 ...]>
 '''
-
 
 def create_dictionary(runFile):
     ranker = dict()
@@ -35,28 +52,26 @@ def create_dictionary(runFile):
                 qid = data[0]
                 pid = data[2]
                 score = data[4]
+
                 if qid in ranker:
-                    paravalue = ranker.get(qid)
-                    if pid in paravalue:
-                        paravalue.get(pid).insert(current_feature_number,score)
+                    paraExtract = ranker.get(qid)
+                    if pid in paraExtract:
+                        list = paraExtract.get(pid)
+                        list[current_feature_number] = score
                     else:
                         scorelist = [0.0 for x in range(0, number_of_feature)]
-                        scorelist.insert(current_feature_number, score)
-                        paravalue[pid]=scorelist
+                        scorelist[current_feature_number] = score
+                        paraExtract[pid] = scorelist
                 else:
                     scorelist = [0.0 for x in range(0, number_of_feature)]
-                    scorelist.insert(current_feature_number,score)
+                    scorelist[current_feature_number] = score
                     inner = dict()
                     inner[pid] = scorelist
-                    ranker[qid]= inner
+                    ranker[qid] = inner
 
         current_feature_number = current_feature_number + 1
 
-
-def displayQrel(Qrel):
-    for key, value in Qrel.items():
-        for para in value:
-            print(key, para)
+    return ranker
 
 
 def readQrel(qrelpath):
@@ -76,9 +91,21 @@ def readQrel(qrelpath):
     return Qrel
 
 
-def displayFile(fileList):
+def dump_file_out(fileList):
     for file in fileList:
         print(file)
+
+
+def display_qrel_out(Qrel):
+    for key, value in Qrel.items():
+        for para in value:
+            print(key, para)
+
+
+def display_dict_out(Qrel):
+    for key, value in Qrel.items():
+        for k, v in value.items():
+            print(key, k, v)
 
 
 def createFrame():
@@ -105,6 +132,7 @@ if __name__ == '__main__':
     parser.add_argument("-q", "--qrelpath", help="Path to the Qrel file", required=True)
     parser.add_argument("-d", "--dirpath", help="Path to the Qrel file", required=True)
     parser.add_argument("-v", "--verbose", help="Display information on the stdout", action="store_true")
+    parser.add_argument("-s", "--suffix", help="Display information on the stdout")
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
 
     Qrel = None
@@ -117,7 +145,14 @@ if __name__ == '__main__':
         runFiles = getFileList(args.dirpath)
 
     if args.verbose:
-        displayQrel(Qrel)
-        displayFile(runFiles)
+        display_qrel_out(Qrel)
+        dump_file_out(runFiles)
 
-    create_dictionary(runFiles)
+    ranker = create_dictionary(runFiles)
+    if(args.verbose):
+        display_dict_out(ranker)
+
+    if args.suffix:
+        write_feature_file(Qrel,ranker,args.suffix)
+    else:
+        write_feature_file(Qrel,ranker)
