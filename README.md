@@ -1,6 +1,6 @@
 # RankLib
 
-Create the ranklib by taking the run directory as input with Ground truth file
+Create the ranklib by taking the Run files directory as input with Ground truth file
 
 # CommandLine options
 
@@ -17,3 +17,6 @@ optional arguments:
   -s SUFFIX, --suffix SUFFIX
                         Pass a filename suffix
 ```
+# Note
+
+The directory should contains only the run files because program does not make any sanity check if other file exists, each file as considered as one feature
