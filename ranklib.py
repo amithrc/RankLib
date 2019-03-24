@@ -21,10 +21,11 @@ We can use this to combine the rank files
 '''
 def write_feature_file(qrel, ranker, fname_suffix="featurefile"):
     fname = fname_suffix+".txt"
+    print("Creating the feature file in the PWD {}".format(fname))
     with open(fname, 'a') as fw:
         qid_counter = 1
         for qid, paradict in ranker.items():
-            print("Writing the feature for the Qid {}".format(qid))
+            print(".",end=" ")
             for pid, score in paradict.items():
                 is_rel = is_relevant(qrel, qid, pid)
                 qid_val = "qid:{}".format(qid_counter)
