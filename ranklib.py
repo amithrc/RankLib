@@ -8,6 +8,8 @@ import sys
 import pandas as pd
 import os
 
+verbose = False
+
 
 def is_relevant(qrel, qid, pid):
     if qid in qrel:
@@ -27,7 +29,7 @@ We can use this to combine the rank files
 '''
 
 
-def write_feature_file(qrel, ranker, fname_suffix="featurefile"):
+def write_feature_file(qrel, ranker, fname_suffix):
     fname = fname_suffix + ".txt"
     print("Creating the feature file in the PWD {}".format(fname))
     with open(fname, 'w') as fw:
@@ -50,6 +52,8 @@ def write_feature_file(qrel, ranker, fname_suffix="featurefile"):
                     c = c + 1
                 info = "#" + qid + "_" + pid
                 line = str(is_rel) + " " + qid_val + " " + sb + " " + info + "\n"
+                if verbose:
+                    print(line)
                 fw.write(line)
             qid_counter = qid_counter + 1
 
@@ -173,7 +177,7 @@ if __name__ == '__main__':
     parser.add_argument("-q", "--qrelpath", help="Path to the Qrel file", required=True)
     parser.add_argument("-d", "--dirpath", help="Path to the Qrel file", required=True)
     parser.add_argument("-v", "--verbose", help="Display information on the stdout", action="store_true")
-    parser.add_argument("-s", "--suffix", help="Display information on the stdout")
+    parser.add_argument("-s", "--suffix", help="Pass a filename suffix")
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
 
     Qrel = None
@@ -186,6 +190,7 @@ if __name__ == '__main__':
         runFiles = getFileList(args.dirpath)
 
     if args.verbose:
+        verbose = True
         display_qrel_out(Qrel)
         dump_file_out(runFiles)
 
@@ -193,7 +198,10 @@ if __name__ == '__main__':
     if (args.verbose):
         display_dict_out(ranker)
 
+    fname = ""
     if args.suffix:
+        fname = args.suffix + ".txt"
         write_feature_file(Qrel, ranker, args.suffix)
     else:
-        write_feature_file(Qrel, ranker)
+        fname = "featurefile.txt"
+        write_feature_file(Qrel, ranker, fname)
