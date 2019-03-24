@@ -5,6 +5,7 @@ import os
 from scipy import stats
 import numpy as np
 
+
 def has(qrels, qid, pid):
     if qrels.get(qid) is None:
         return False
@@ -16,7 +17,13 @@ def has(qrels, qid, pid):
             return False
 
 
-def createDictionary(runFile):
+'''
+Reads all the files in run files directory and put it in Dict
+dict<QID,dict<PID,[0.0 0.0 0.0 ...]>
+'''
+
+
+def create_dictionary(runFile):
     ranker = dict()
     number_of_feature = len(runFiles)
     current_feature_number = 0
@@ -28,14 +35,20 @@ def createDictionary(runFile):
                 qid = data[0]
                 pid = data[2]
                 score = data[4]
-                if ranker.get(qid) is None:
-                    pidList = []
-                    scorelist = [x for x in range(0,number_of_feature)]
-                    inner = dict()
-
-
+                if qid in ranker:
+                    paravalue = ranker.get(qid)
+                    if pid in paravalue:
+                        paravalue.get(pid).insert(current_feature_number,score)
+                    else:
+                        scorelist = [0.0 for x in range(0, number_of_feature)]
+                        scorelist.insert(current_feature_number, score)
+                        paravalue[pid]=scorelist
                 else:
-                    pass
+                    scorelist = [0.0 for x in range(0, number_of_feature)]
+                    scorelist.insert(current_feature_number,score)
+                    inner = dict()
+                    inner[pid] = scorelist
+                    ranker[qid]= inner
 
         current_feature_number = current_feature_number + 1
 
@@ -44,27 +57,6 @@ def displayQrel(Qrel):
     for key, value in Qrel.items():
         for para in value:
             print(key, para)
-
-def zscoreNormalize(runFiles):
-
-    for file in runFiles:
-        print("\n")
-        with open(file,'r') as run:
-            scores = []
-            for line in run:
-                 data = line.split(" ")
-                 scores.append(data[4])
-
-
-            numpyarray = np.array(scores)
-            stats.zscore(numpyarray)
-            for i in numpyarray:
-                print(i)
-
-
-
-
-                # print(os.path.basename(files))
 
 
 def readQrel(qrelpath):
@@ -104,7 +96,7 @@ Read the file names in to list
 '''
 
 
-def readFileList(path):
+def getFileList(path):
     return [os.path.join(path, file) for file in os.listdir(path)]
 
 
@@ -122,11 +114,10 @@ if __name__ == '__main__':
         Qrel = readQrel(args.qrelpath)
 
     if args.dirpath:
-        runFiles = readFileList(args.dirpath)
+        runFiles = getFileList(args.dirpath)
 
     if args.verbose:
         displayQrel(Qrel)
         displayFile(runFiles)
 
-    #createDictionary(runFiles)
-    zscoreNormalize(runFiles)
+    create_dictionary(runFiles)
