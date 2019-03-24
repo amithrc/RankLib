@@ -14,7 +14,11 @@ def is_relevant(qrel, qid, pid):
     else:
         return 0
 
-
+'''
+Write to the feature file format
+Append the qid_pid as info
+We can use this to combine the rank files
+'''
 def write_feature_file(qrel, ranker, fname_suffix="featurefile"):
     fname = fname_suffix+".txt"
     with open(fname, 'a') as fw:
@@ -73,7 +77,9 @@ def create_dictionary(runFile):
 
     return ranker
 
-
+'''
+Helper functions to read the Qrel file into dict
+'''
 def readQrel(qrelpath):
     Qrel = dict()
     with open(qrelpath, 'r') as qrel:
@@ -90,18 +96,24 @@ def readQrel(qrelpath):
 
     return Qrel
 
-
+'''
+Helper functions to display the list of file
+'''
 def dump_file_out(fileList):
     for file in fileList:
         print(file)
 
-
+'''
+Helper functions to display the qrel file
+'''
 def display_qrel_out(Qrel):
     for key, value in Qrel.items():
         for para in value:
             print(key, para)
 
-
+'''
+Helper functions to display the updated score file
+'''
 def display_dict_out(Qrel):
     for key, value in Qrel.items():
         for k, v in value.items():
@@ -121,8 +133,6 @@ def createFrame():
 '''
 Read the file names in to list
 '''
-
-
 def getFileList(path):
     return [os.path.join(path, file) for file in os.listdir(path)]
 
