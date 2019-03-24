@@ -1,3 +1,8 @@
+'''
+@Author Amith RC
+@Created March 24th 2019
+@Purpose: Creates the Ranklib feature file using the Treccar
+'''
 import argparse
 import sys
 import pandas as pd
@@ -14,36 +19,46 @@ def is_relevant(qrel, qid, pid):
     else:
         return 0
 
+
 '''
 Write to the feature file format
 Append the qid_pid as info
 We can use this to combine the rank files
 '''
+
+
 def write_feature_file(qrel, ranker, fname_suffix="featurefile"):
-    fname = fname_suffix+".txt"
+    fname = fname_suffix + ".txt"
     print("Creating the feature file in the PWD {}".format(fname))
-    with open(fname, 'a') as fw:
+    with open(fname, 'w') as fw:
         qid_counter = 1
+        pcount = 0
         for qid, paradict in ranker.items():
-            print(".",end=" ")
+            pcount = pcount + 1
+            if (pcount % 50 == 0):
+                print("\n")
+            else:
+                print(".", end=" ")
             for pid, score in paradict.items():
                 is_rel = is_relevant(qrel, qid, pid)
                 qid_val = "qid:{}".format(qid_counter)
-                sb=""
-                c=1
+                sb = ""
+                c = 1
                 for score_val in score:
-                    sb+=str(c)+":"+str(score_val)
-                    sb+=" "
-                    c=c+1
-                info="#"+qid+"_"+pid
-                line=str(is_rel)+" "+qid_val+" "+sb+" "+info+"\n"
+                    sb += str(c) + ":" + str(score_val)
+                    sb += " "
+                    c = c + 1
+                info = "#" + qid + "_" + pid
+                line = str(is_rel) + " " + qid_val + " " + sb + " " + info + "\n"
                 fw.write(line)
-            qid_counter=qid_counter+1
+            qid_counter = qid_counter + 1
+
 
 '''
 Reads all the files in run files directory and put it in Dict
 dict<QID,dict<PID,[0.0 0.0 0.0 ...]>
 '''
+
 
 def create_dictionary(runFile):
     ranker = dict()
@@ -51,6 +66,7 @@ def create_dictionary(runFile):
     current_feature_number = 0
 
     for run in runFiles:
+        print("Working on file {}".format(run))
         with open(run, 'r') as f:
             for line in f:
                 data = line.split(" ")
@@ -78,9 +94,12 @@ def create_dictionary(runFile):
 
     return ranker
 
+
 '''
 Helper functions to read the Qrel file into dict
 '''
+
+
 def readQrel(qrelpath):
     Qrel = dict()
     with open(qrelpath, 'r') as qrel:
@@ -97,24 +116,33 @@ def readQrel(qrelpath):
 
     return Qrel
 
+
 '''
 Helper functions to display the list of file
 '''
+
+
 def dump_file_out(fileList):
     for file in fileList:
         print(file)
 
+
 '''
 Helper functions to display the qrel file
 '''
+
+
 def display_qrel_out(Qrel):
     for key, value in Qrel.items():
         for para in value:
             print(key, para)
 
+
 '''
 Helper functions to display the updated score file
 '''
+
+
 def display_dict_out(Qrel):
     for key, value in Qrel.items():
         for k, v in value.items():
@@ -134,6 +162,8 @@ def createFrame():
 '''
 Read the file names in to list
 '''
+
+
 def getFileList(path):
     return [os.path.join(path, file) for file in os.listdir(path)]
 
@@ -160,10 +190,10 @@ if __name__ == '__main__':
         dump_file_out(runFiles)
 
     ranker = create_dictionary(runFiles)
-    if(args.verbose):
+    if (args.verbose):
         display_dict_out(ranker)
 
     if args.suffix:
-        write_feature_file(Qrel,ranker,args.suffix)
+        write_feature_file(Qrel, ranker, args.suffix)
     else:
-        write_feature_file(Qrel,ranker)
+        write_feature_file(Qrel, ranker)
