@@ -1,7 +1,7 @@
 '''
 @Author Amith RC
 @Created March 24th 2019
-@Purpose: Creates the Ranklib feature file using the Treccar
+@Purpose: Creates the Ranklib feature file using the Run file (TREC car format)
 '''
 import argparse
 import sys
