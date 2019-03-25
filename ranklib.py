@@ -7,6 +7,7 @@ import argparse
 import sys
 import pandas as pd
 import os
+import subprocess
 
 verbose = False
 
@@ -22,12 +23,24 @@ def is_relevant(qrel, qid, pid):
         return 0
 
 
+def create_pandas_frame(ranker,number_of_features):
+    pass
+
 '''
-Write to the feature file format
+Write to the feature file format, write the feature file from the ranker dict
 Append the qid_pid as info
 We can use this to combine the rank files
 '''
 
+def getWeights():
+    pass
+
+def  create_combined_run_file():
+    pass
+
+def run_rank_lib(jarPath):
+    command = "java -jar "+jarPath
+    subprocess.call(command.split(" "))
 
 def write_feature_file(qrel, ranker, fname_suffix):
     fname = fname_suffix + ".txt"
@@ -161,8 +174,6 @@ def createFrame():
 
     rankLIB = pd.DataFrame(columns=col)
     print(rankLIB)
-
-
 '''
 Read the file names in to list
 '''
@@ -178,6 +189,9 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--dirpath", help="Path to the Qrel file", required=True)
     parser.add_argument("-v", "--verbose", help="Display information on the stdout", action="store_true")
     parser.add_argument("-s", "--suffix", help="Pass a filename suffix")
+    parser.add_argument("-r", "--ranklib", help="Pass a filename suffix")
+    parser.add_argument("-n", "--normalize", help="Perform Z score normalize on the data", action="store_true")
+
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
 
     Qrel = None
@@ -198,6 +212,9 @@ if __name__ == '__main__':
     if (args.verbose):
         display_dict_out(ranker)
 
+    if args.normalize:
+        pass
+
     fname = ""
     if args.suffix:
         fname = args.suffix + ".txt"
@@ -205,3 +222,8 @@ if __name__ == '__main__':
     else:
         fname = "featurefile.txt"
         write_feature_file(Qrel, ranker, fname)
+
+    if(args.ranklib):
+        run_rank_lib(args.ranklib)
+        weights = getWeights()
+        create_combined_run_file()
