@@ -7,8 +7,7 @@ import argparse
 import sys
 import pandas as pd
 import os
-import numpy as np
-from scipy.stats import zscore
+
 verbose = False
 
 
@@ -58,7 +57,8 @@ def write_feature_file_unnormalized(qrel, ranker, fname_suffix):
                 fw.write(line)
             qid_counter = qid_counter + 1
 
-
+def write_feature_file_normalized(qrel, ranker, fname_suffix):
+    pass
 '''
 Reads all the files in run files directory and put it in Dict
 dict<QID,dict<PID,[0.0 0.0 0.0 ...]>
