@@ -7,8 +7,8 @@ import argparse
 import sys
 import pandas as pd
 import os
-import subprocess
-
+import numpy as np
+from scipy.stats import zscore
 verbose = False
 
 
@@ -23,26 +23,14 @@ def is_relevant(qrel, qid, pid):
         return 0
 
 
-def create_pandas_frame(ranker,number_of_features):
-    pass
-
 '''
 Write to the feature file format, write the feature file from the ranker dict
 Append the qid_pid as info
 We can use this to combine the rank files
 '''
 
-def getWeights():
-    pass
 
-def  create_combined_run_file():
-    pass
-
-def run_rank_lib(jarPath):
-    command = "java -jar "+jarPath
-    subprocess.call(command.split(" "))
-
-def write_feature_file(qrel, ranker, fname_suffix):
+def write_feature_file_unnormalized(qrel, ranker, fname_suffix):
     fname = fname_suffix + ".txt"
     print("Creating the feature file in the PWD {}".format(fname))
     with open(fname, 'w') as fw:
@@ -166,14 +154,53 @@ def display_dict_out(Qrel):
             print(key, k, v)
 
 
-def createFrame():
-    col = ['rel', 'qid', 'pid']
+'''
+Creates te columns based on the number of features
+This is used to create pandas DF
+isrelevant,qid,pid,fet1,fet2 ...... fetn
+'''
 
-    for i in range(0, 10):
+
+def get_columns(number_of_fet):
+    col = []
+    col.append("isrel")
+    col.append("qid")
+    col.append("pid")
+
+    for i in range(0, number_of_fet):
         col.append("fet" + str(i + 1))
+    return col
 
-    rankLIB = pd.DataFrame(columns=col)
-    print(rankLIB)
+def get_fet_col(number_of_fet):
+    fet = []
+    for i in range(number_of_fet):
+        fet.append("fet"+str(i+1))
+    return fet
+'''
+Convert dictionary into list
+'''
+
+
+def convert_dict_to_list(ranker, qrel):
+    rowlists = []
+    for qid, pval in ranker.items():
+        for pid, slist in pval.items():
+            temp = []
+            temp.append(is_relevant(qrel, qid, pid))
+            temp.append(qid)
+            temp.append(pid)
+            for val in slist:
+                temp.append(val)
+            rowlists.append(temp)
+    return rowlists
+
+
+def create_data_frame(rowlist, number_of_fet):
+    col = get_columns(number_of_fet)
+    fet_data_frame = pd.DataFrame(rowlist, columns=col)
+    return fet_data_frame
+
+
 '''
 Read the file names in to list
 '''
@@ -181,6 +208,16 @@ Read the file names in to list
 
 def getFileList(path):
     return [os.path.join(path, file) for file in os.listdir(path)]
+
+
+'''
+Helper function to Display the 
+row list created using the dictionary
+'''
+
+def disp_row_list(rowlist):
+    for val in rowlist:
+        print(val)
 
 
 if __name__ == '__main__':
@@ -209,21 +246,20 @@ if __name__ == '__main__':
         dump_file_out(runFiles)
 
     ranker = create_dictionary(runFiles)
+
     if (args.verbose):
         display_dict_out(ranker)
-
-    if args.normalize:
-        pass
 
     fname = ""
     if args.suffix:
         fname = args.suffix + ".txt"
-        write_feature_file(Qrel, ranker, args.suffix)
     else:
         fname = "featurefile.txt"
-        write_feature_file(Qrel, ranker, fname)
 
-    if(args.ranklib):
-        run_rank_lib(args.ranklib)
-        weights = getWeights()
-        create_combined_run_file()
+    if args.normalize:
+        rowlist = convert_dict_to_list(ranker, Qrel)
+        df = create_data_frame(rowlist, len(runFiles))
+        if (args.verbose):
+            print(df.head())
+    else:
+        write_feature_file_unnormalized(Qrel, ranker, fname)
