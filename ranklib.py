@@ -7,6 +7,9 @@ import argparse
 import sys
 import pandas as pd
 import os
+import numpy as np
+
+from scipy.stats import zscore
 
 verbose = False
 
@@ -57,8 +60,13 @@ def write_feature_file_unnormalized(qrel, ranker, fname_suffix):
                 fw.write(line)
             qid_counter = qid_counter + 1
 
-def write_feature_file_normalized(qrel, ranker, fname_suffix):
-    pass
+
+def write_feature_file_normalized(frame,number_of_fet):
+    fetlist = get_fet_col(number_of_fet)
+    zcorelist = [fet+"_zscore" for fet in fetlist]
+    print(zcorelist)
+
+
 '''
 Reads all the files in run files directory and put it in Dict
 dict<QID,dict<PID,[0.0 0.0 0.0 ...]>
@@ -171,11 +179,14 @@ def get_columns(number_of_fet):
         col.append("fet" + str(i + 1))
     return col
 
+
 def get_fet_col(number_of_fet):
     fet = []
     for i in range(number_of_fet):
-        fet.append("fet"+str(i+1))
+        fet.append("fet" + str(i + 1))
     return fet
+
+
 '''
 Convert dictionary into list
 '''
@@ -215,9 +226,21 @@ Helper function to Display the
 row list created using the dictionary
 '''
 
+
 def disp_row_list(rowlist):
     for val in rowlist:
         print(val)
+
+
+def normalize_data_frame(frame, number_of_fet):
+    fetlist = get_fet_col(number_of_fet)
+
+    for fet in fetlist:
+        np_array = np.array(frame[fet])
+        z_score = zscore(np_array.astype(np.float))
+        frame[fet + "_zscore"] = z_score
+        if verbose:
+            print(z_score)
 
 
 if __name__ == '__main__':
@@ -259,7 +282,9 @@ if __name__ == '__main__':
     if args.normalize:
         rowlist = convert_dict_to_list(ranker, Qrel)
         df = create_data_frame(rowlist, len(runFiles))
+        normalize_data_frame(df, len(runFiles))
         if (args.verbose):
             print(df.head())
+        write_feature_file_normalized(df,len(runFiles))
     else:
         write_feature_file_unnormalized(Qrel, ranker, fname)
