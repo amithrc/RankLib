@@ -6,6 +6,7 @@ Create the ranklib by taking the Run files directory as input with Ground truth 
 
 ```
 usage: RankLib File Formatter [-h] -q QRELPATH -d DIRPATH [-v] [-s SUFFIX]
+                              [-r RANKLIB] [-n]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -16,6 +17,9 @@ optional arguments:
   -v, --verbose         Display information on the stdout
   -s SUFFIX, --suffix SUFFIX
                         Pass a filename suffix
+  -r RANKLIB, --ranklib RANKLIB
+                        Pass a filename suffix
+  -n, --normalize       Perform Z score normalize on the each feature
 ```
 # Note
 
