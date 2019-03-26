@@ -8,6 +8,8 @@ import sys
 import pandas as pd
 import os
 import numpy as np
+import itertools
+
 
 from scipy.stats import zscore
 
@@ -61,10 +63,27 @@ def write_feature_file_unnormalized(qrel, ranker, fname_suffix):
             qid_counter = qid_counter + 1
 
 
-def write_feature_file_normalized(frame,number_of_fet):
+def write_feature_file_normalized(df,number_of_fet,fname_suffix):
     fetlist = get_fet_col(number_of_fet)
     zcorelist = [fet+"_zscore" for fet in fetlist]
-    print(zcorelist)
+    count=0
+    with open(fname_suffix,'w') as f:
+        for index, row in df.iterrows():
+          count=count+1
+          binaryval=str(row['isrel'])+" "
+          qid="qid:"+str(count)
+          subcount=itertools.count(1)
+          scoreslist=[str(next(subcount))+":"+str(row[fet])+" " for fet in zcorelist]
+          scores=""
+          for val in scoreslist:
+              scores+=val
+          info = "#"+row['qid']+"_"+row['pid']
+          line=binaryval+qid+scores+info+'\n'
+          f.write(line)
+
+
+
+
 
 
 '''
@@ -285,6 +304,6 @@ if __name__ == '__main__':
         normalize_data_frame(df, len(runFiles))
         if (args.verbose):
             print(df.head())
-        write_feature_file_normalized(df,len(runFiles))
+        write_feature_file_normalized(df,len(runFiles),fname)
     else:
         write_feature_file_unnormalized(Qrel, ranker, fname)
