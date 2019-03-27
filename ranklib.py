@@ -307,7 +307,7 @@ def create_combined_run_file(modelfile, fetfile):
     weights = get_weights(modelfile)
 
     with open(fetfile, 'r') as f:
-        with open('combined_run.txt','w') as w1:
+        with open('combined_run.txt', 'w') as w1:
             count = itertools.count(1)
             for line in f:
                 sum = 0.0
@@ -325,7 +325,6 @@ def create_combined_run_file(modelfile, fetfile):
                 qid, pid = get_qid_pid(line)
                 lw = '{} Q0 {} {} {} {}'.format(qid, pid, next(count), sum, "combined_run")
                 w1.write(lw)
-
 
 
 def disp_row_list(rowlist):
