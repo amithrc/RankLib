@@ -9,10 +9,11 @@ import pandas as pd
 import os
 import numpy as np
 import itertools
-
-
+import subprocess as sp
 from scipy.stats import zscore
+import re
 
+fetextract = re.compile(r'[0-9]+:[-.0-9]+')
 verbose = False
 
 
@@ -35,7 +36,6 @@ We can use this to combine the rank files
 
 
 def write_feature_file_unnormalized(qrel, ranker, fname_suffix):
-    fname = fname_suffix + ".txt"
     print("Creating the feature file in the PWD {}".format(fname))
     with open(fname, 'w') as fw:
         qid_counter = 1
@@ -63,27 +63,25 @@ def write_feature_file_unnormalized(qrel, ranker, fname_suffix):
             qid_counter = qid_counter + 1
 
 
-def write_feature_file_normalized(df,number_of_fet,fname_suffix):
+def write_feature_file_normalized(df, number_of_fet, fname_suffix):
     fetlist = get_fet_col(number_of_fet)
-    zcorelist = [fet+"_zscore" for fet in fetlist]
-    count=0
-    with open(fname_suffix,'w') as f:
+    zcorelist = [fet + "_zscore" for fet in fetlist]
+    count = 0
+    with open(fname_suffix, 'w') as f:
         for index, row in df.iterrows():
-          count=count+1
-          binaryval=str(row['isrel'])+" "
-          qid="qid:"+str(count)
-          subcount=itertools.count(1)
-          scoreslist=[str(next(subcount))+":"+str(row[fet])+" " for fet in zcorelist]
-          scores=""
-          for val in scoreslist:
-              scores+=val
-          info = "#"+row['qid']+"_"+row['pid']
-          line=binaryval+qid+scores+info+'\n'
-          f.write(line)
-
-
-
-
+            count = count + 1
+            binaryval = str(row['isrel']) + " "
+            qid = "qid:" + str(count) + " "
+            subcount = itertools.count(1)
+            scoreslist = [str(next(subcount)) + ":" + str(row[fet]) + " " for fet in zcorelist]
+            scores = ""
+            for val in scoreslist:
+                scores += val
+            info = "#" + row['qid'] + "_" + row['pid']
+            line = binaryval + qid + scores + info + '\n'
+            if verbose:
+                print(".")
+            f.write(line)
 
 
 '''
@@ -237,13 +235,97 @@ Read the file names in to list
 
 
 def getFileList(path):
-    return [os.path.join(path, file) for file in os.listdir(path)]
+    # return [os.path.join(path, file) for file in os.listdir(path) if os.path.isdir(file)]
+    filelist = list()
+    for file in os.listdir(path):
+        absolute_path = os.path.join(path, file)
+        if os.path.isdir(absolute_path):
+            continue
+        filelist.append(absolute_path)
+    return filelist
 
 
 '''
 Helper function to Display the 
 row list created using the dictionary
 '''
+
+
+def run_rank_lib(rpath, fetfile):
+    if not os.path.exists(fetfile):
+        print("Feature file does not exists in the current working directory")
+        sys.exit(-1)
+
+    rlib_command = 'java -jar {} -train {} -ranker 4 -metric2t MAP -save model.txt'.format(rpath, fetfile)
+    process = sp.Popen(rlib_command.split(), stdout=sp.PIPE)
+    for line in process.stdout:
+        sys.stdout.write(line.decode('utf-8'))
+    exitcode = process.wait()
+    if exitcode == 0:
+        print("Sub process exited gracefully")
+    else:
+        print("Ranklib process did not exit gracefully, exiting the program")
+        sys.exit(-1)
+
+
+'''
+Reads te model file
+'''
+
+
+def get_weights(model):
+    weights = list()
+    with open(model, 'r') as f:
+        for line in f:
+            if not line.startswith('#'):
+                data = line.split(" ")
+                for val in data:
+                    w = float(val.split(":")[1])
+                    weights.append(w)
+    return weights
+
+
+def get_qid_pid(line):
+    match2 = line.split(" ")
+    qid_pid = match2[-1]
+    qid_pid = qid_pid[1:]
+    qid_pid = qid_pid.split("_")
+    qid = qid_pid[0]
+    pid = qid_pid[1]
+    return (qid, pid)
+
+
+def create_combined_run_file(modelfile, fetfile):
+    if not os.path.exists(modelfile):
+        print("model file does not exists in the current working directory")
+        sys.exit(-1)
+
+    if not os.path.exists(fetfile):
+        print("Feature file does not exists in the current working directory")
+        sys.exit(-1)
+
+    weights = get_weights(modelfile)
+
+    with open(fetfile, 'r') as f:
+        with open('combined_run.txt','w') as w1:
+            count = itertools.count(1)
+            for line in f:
+                sum = 0.0
+                match1 = fetextract.findall(line)
+                if match1 is not None:
+                    if len(match1) == len(weights):
+                        for index, fet in enumerate(match1):
+                            s = float(fet.split(":")[1])
+                            w = weights[index]
+                            sum += (s * w)
+                else:
+                    print("Some issues using regex while extracting the feature values")
+                    sys.exit(-1)
+
+                qid, pid = get_qid_pid(line)
+                lw = '{} Q0 {} {} {} {}'.format(qid, pid, next(count), sum, "combined_run")
+                w1.write(lw)
+
 
 
 def disp_row_list(rowlist):
@@ -268,7 +350,7 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--dirpath", help="Path to the Qrel file", required=True)
     parser.add_argument("-v", "--verbose", help="Display information on the stdout", action="store_true")
     parser.add_argument("-s", "--suffix", help="Pass a filename suffix")
-    parser.add_argument("-r", "--ranklib", help="Pass a filename suffix")
+    parser.add_argument("-r", "--ranklib", help="Path to the RankLib jar")
     parser.add_argument("-n", "--normalize", help="Perform Z score normalize on the data", action="store_true")
 
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
@@ -298,12 +380,17 @@ if __name__ == '__main__':
     else:
         fname = "featurefile.txt"
 
+    print("Filename = " + fname)
     if args.normalize:
         rowlist = convert_dict_to_list(ranker, Qrel)
         df = create_data_frame(rowlist, len(runFiles))
         normalize_data_frame(df, len(runFiles))
         if (args.verbose):
             print(df.head())
-        write_feature_file_normalized(df,len(runFiles),fname)
+        write_feature_file_normalized(df, len(runFiles), fname)
     else:
         write_feature_file_unnormalized(Qrel, ranker, fname)
+
+    if args.ranklib:
+        run_rank_lib(args.ranklib, fname)
+        create_combined_run_file("model.txt", fname)
