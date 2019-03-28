@@ -295,36 +295,57 @@ def get_qid_pid(line):
     return (qid, pid)
 
 
-def create_combined_run_file(modelfile, fetfile):
-    if not os.path.exists(modelfile):
+def check_for_file(file1,file2):
+    if not os.path.exists(file1):
         print("model file does not exists in the current working directory")
         sys.exit(-1)
 
-    if not os.path.exists(fetfile):
+    if not os.path.exists(file2):
         print("Feature file does not exists in the current working directory")
         sys.exit(-1)
 
+
+def get_combined_run_dict(modelfile, fetfile):
+    check_for_file(modelfile,fetfile)
+    combined_dict = dict()
     weights = get_weights(modelfile)
 
     with open(fetfile, 'r') as f:
-        with open('combined_run.txt', 'w') as w1:
-            count = itertools.count(1)
-            for line in f:
-                sum = 0.0
-                match1 = fetextract.findall(line)
-                if match1 is not None:
-                    if len(match1) == len(weights):
-                        for index, fet in enumerate(match1):
-                            s = float(fet.split(":")[1])
-                            w = weights[index]
-                            sum += (s * w)
-                else:
-                    print("Some issues using regex while extracting the feature values")
-                    sys.exit(-1)
+        for line in f:
+            score = 0.0
+            match1 = fetextract.findall(line)
+            if match1 is not None:
+                if len(match1) == len(weights):
+                    for index, fet in enumerate(match1):
+                        s = float(fet.split(":")[1])
+                        w = weights[index]
+                        score += (s * w)
+            else:
+                print("Some issues using regex while extracting the feature values")
+                sys.exit(-1)
 
-                qid, pid = get_qid_pid(line)
-                lw = '{} Q0 {} {} {} {}'.format(qid, pid, next(count), sum, "combined_run")
-                w1.write(lw)
+            qid, pid = get_qid_pid(line)
+            if qid in combined_dict:
+                paradict_extract = combined_dict.get(qid)
+                paradict_extract[pid] = score
+
+            else:
+                paradict = dict()
+                paradict[pid] = score
+                combined_dict[qid] = paradict
+    return combined_dict
+
+
+def create_combined_run_file(combineddict):
+
+    for qid,pidDict in combineddict.items():
+        ranking=0
+        for pid,score in pidDict.items():
+            ranking=ranking+1
+            line = '{} Q0 {} {} {} {} \n'.format(qid,pid,ranking,score,"Combined_runfile")
+            print(line)
+
+
 
 
 def disp_row_list(rowlist):
@@ -392,4 +413,5 @@ if __name__ == '__main__':
 
     if args.ranklib:
         run_rank_lib(args.ranklib, fname)
-        create_combined_run_file("model.txt", fname)
+        out = get_combined_run_dict("model.txt",fname)
+        create_combined_run_file(out)
