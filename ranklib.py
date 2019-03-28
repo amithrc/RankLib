@@ -4,6 +4,7 @@
 @Purpose: Creates the Ranklib feature file using the Run file (TREC car format)
 '''
 import argparse
+import operator
 import sys
 import pandas as pd
 import os
@@ -290,12 +291,12 @@ def get_qid_pid(line):
     qid_pid = match2[-1]
     qid_pid = qid_pid[1:]
     qid_pid = qid_pid.split("_")
-    qid = qid_pid[0]
-    pid = qid_pid[1]
+    qid = qid_pid[0].rstrip()
+    pid = qid_pid[1].rstrip()
     return (qid, pid)
 
 
-def check_for_file(file1,file2):
+def check_for_file(file1, file2):
     if not os.path.exists(file1):
         print("model file does not exists in the current working directory")
         sys.exit(-1)
@@ -306,7 +307,7 @@ def check_for_file(file1,file2):
 
 
 def get_combined_run_dict(modelfile, fetfile):
-    check_for_file(modelfile,fetfile)
+    check_for_file(modelfile, fetfile)
     combined_dict = dict()
     weights = get_weights(modelfile)
 
@@ -336,16 +337,25 @@ def get_combined_run_dict(modelfile, fetfile):
     return combined_dict
 
 
+def sort_dict(combined_dict):
+    sorted_combined = dict()
+    for qid, unsorted in combined_dict.items():
+        sorted_data = sorted(unsorted.items(), key=operator.itemgetter(1))
+        sorted_combined[qid] = sorted_data
+    return sorted_combined
+
+
 def create_combined_run_file(combineddict):
-
-    for qid,pidDict in combineddict.items():
-        ranking=0
-        for pid,score in pidDict.items():
-            ranking=ranking+1
-            line = '{} Q0 {} {} {} {} \n'.format(qid,pid,ranking,score,"Combined_runfile")
-            print(line)
-
-
+    with open("combined_run.txt", 'w') as f:
+        for qid, pidDict in combineddict.items():
+            ranking = 0
+            for pid, score in pidDict.items():
+                ranking = ranking + 1
+                line = qid + " " + "Q0" + " " + pid + " " + str(ranking) + " " + str(
+                    score) + " " + "Combined_run" + "\n"
+                if verbose:
+                    print(line)
+                f.write(line)
 
 
 def disp_row_list(rowlist):
@@ -413,5 +423,5 @@ if __name__ == '__main__':
 
     if args.ranklib:
         run_rank_lib(args.ranklib, fname)
-        out = get_combined_run_dict("model.txt",fname)
+        out = get_combined_run_dict("model.txt", fname)
         create_combined_run_file(out)
