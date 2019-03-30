@@ -21,7 +21,11 @@ optional arguments:
                         Pass a filename suffix
   -n, --normalize       Perform Z score normalize on the each feature
 ```
+Example command line argument
 
+```
+--qrelpath  D:\test200-train\train.pages.cbor-article.qrels --dirpath D:\test --ranklib D:\RankLib\RankLib-2.10.jar -n
+```
 # Normalizer
 
 Another application that takes the feature file and qrels as input and produces zscore normalized version output file. Additionally, you can pass the ranklib path, it will run the ranklib and converts the feature file into combined run file
@@ -45,6 +49,17 @@ optional arguments:
 
 ```
 
+Example command line argument
+
+```
+--normalizer --qrelpath  D:\test200-train\train.pages.cbor-article.qrels --fetpath featurefile.txt --ranklib D:\RankLib\RankLib-2.10.jar
+```
+
+File Format
+
+```
+1 qid:1 1:2.86898275512205 2:1.6123268762274203 3:1.830355435547622 4:1.6527173793977503 #enwiki:Political%20status%20of%20Transnistria_6019abc315e3afd5250d01a8897bee49b1646249
+```
 # Note
 
 The directory should contains only the run files because program does not make any sanity check if other file exists, each file as considered as one feature
