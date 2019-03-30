@@ -19,17 +19,20 @@ def read_feature_file(filepath):
             match = rlib.fetextract.findall(line)
             count = 0
             if match is not None:
-                count = count + 1
                 for val in match:
                     count = count + 1
                     score.append(float(val.split(":")[1]))
             number_of_fet = count
 
             if qid in fetdict:
-                pass
+                inner_dict_extract = fetdict.get(qid)
+                inner_dict_extract[pid] = score
             else:
-                pass
-    return fetdict
+                inner_dict = dict()
+                inner_dict[pid] = score
+                fetdict[qid] = inner_dict
+
+    return fetdict, number_of_fet
 
 
 if __name__ == '__main__':
@@ -45,6 +48,29 @@ if __name__ == '__main__':
 
     qrel = None
     fet = None
-    if args.normalizer:
-        fet = read_feature_file(args.fetpath)
+    number_of_fet = 0
+
+    fname = ""
+    if args.suffix:
+        fname = args.suffix + ".txt"
+    else:
+        fname = "normalizedfeaturefile.txt"
+
+    if args.qrelpath:
         qrel = rlib.readQrel(args.qrelpath)
+
+    if args.fetpath:
+        fet, number_of_fet = read_feature_file(args.fetpath)
+
+    if args.normalizer:
+        rowlist = rlib.convert_dict_to_list(fet, qrel)
+        df = rlib.create_data_frame(rowlist, number_of_fet)
+        rlib.normalize_data_frame(df, number_of_fet)
+        if (args.verbose):
+            print(df.head())
+        rlib.write_feature_file_normalized(df, number_of_fet, fname)
+
+    if args.ranklib:
+        rlib.run_rank_lib(args.ranklib, fname)
+        out = rlib.get_combined_run_dict("model.txt", fname)
+        rlib.create_combined_run_file(out)
