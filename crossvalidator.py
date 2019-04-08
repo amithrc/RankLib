@@ -6,12 +6,30 @@
 
 import ranklib as rlib
 import argparse
+import subprocess as sp
 import sys
 import os
 
 
 def read_dir_list(dirpath):
     return [os.path.join(dirpath, name) for name in os.listdir(dirpath)]
+
+
+def run_rank_lib(rpath, fetfile, model_file):
+    if not os.path.exists(fetfile):
+        print("Feature file does not exists in the current working directory")
+        sys.exit(-1)
+
+    rlib_command = 'java -jar {} -train {} -ranker 4 -metric2t MAP -save {}'.format(rpath, fetfile, model_file)
+    process = sp.Popen(rlib_command.split(), stdout=sp.PIPE)
+    for line in process.stdout:
+        sys.stdout.write(line.decode('utf-8'))
+    exitcode = process.wait()
+    if exitcode == 0:
+        print("Sub process exited gracefully")
+    else:
+        print("Ranklib process did not exit gracefully, exiting the program")
+        sys.exit(-1)
 
 
 if __name__ == '__main__':
@@ -24,6 +42,12 @@ if __name__ == '__main__':
     parser.add_argument("-n", "--normalizer", help="Perform Z score normalize on the data", action="store_true")
 
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
+
+    model_path = 'model'
+    feature_path = 'feature'
+
+    os.makedirs(model_path, exist_ok=True)
+    os.makedirs(feature_path, exist_ok=True)
 
     qrel = None
     dirlist = None
@@ -41,9 +65,9 @@ if __name__ == '__main__':
 
         fname = ""
         if args.suffix:
-            fname = args.suffix + ".txt"
+            fname = os.path.join(feature_path, args.suffix + ".txt")
         else:
-            fname = os.path.basename(dir) + "-feature.txt"
+            fname = os.path.join(feature_path, (os.path.basename(dir) + "-feature.txt"))
 
         print("Filename = " + fname)
 
@@ -57,7 +81,16 @@ if __name__ == '__main__':
         else:
             rlib.write_feature_file_unnormalized(qrel, ranker, fname)
 
+        model_file = os.path.join(model_path, (os.path.basename(dir) + "-model.txt"))
         if args.ranklib:
-            rlib.run_rank_lib(args.ranklib, fname)
-            out = rlib.get_combined_run_dict("model.txt", fname)
-            rlib.create_combined_run_file(out)
+            run_rank_lib(args.ranklib, fname, model_file)
+
+        '''
+        Reading the feature file to perform the cross validation
+        '''
+        feature_file_list = rlib.getFileList(feature_path)
+
+        for fet_held_out in feature_file_list:
+            for fet in feature_file_list:
+                if fet_held_out != fet:
+                    print(fet_held_out, fet)
