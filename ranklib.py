@@ -37,8 +37,8 @@ We can use this to combine the rank files
 
 
 def write_feature_file_unnormalized(qrel, ranker, fname_suffix):
-    print("Creating the feature file in the PWD {}".format(fname))
-    with open(fname, 'w') as fw:
+    print("Creating the feature file in the PWD {}".format(fname_suffix))
+    with open(fname_suffix, 'w') as fw:
         qid_counter = 1
         pcount = 0
         for qid, paradict in ranker.items():
@@ -91,7 +91,7 @@ dict<QID,dict<PID,[0.0 0.0 0.0 ...]>
 '''
 
 
-def create_dictionary(runFile):
+def create_dictionary(runFiles):
     ranker = dict()
     number_of_feature = len(runFiles)
     current_feature_number = 0

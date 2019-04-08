@@ -11,7 +11,7 @@ import os
 
 
 def read_dir_list(dirpath):
-    return [os.path.abspath(name) for name in os.listdir(dirpath)]
+    return [os.path.join(dirpath, name) for name in os.listdir(dirpath)]
 
 
 if __name__ == '__main__':
@@ -33,9 +33,32 @@ if __name__ == '__main__':
         qrel = rlib.readQrel(args.qrelpath)
 
     for dir in read_dir_list(args.dirpath):
-        runFiles = rlib.getFileList(dir)
-        ranker = rlib.create_dictionary(runFiles)
         print(dir)
-        print(os.path.basename(dir))
+        print("Working on directory {}".format(dir))
+        runFiles = rlib.getFileList(dir)
+        print(runFiles,len(runFiles))
+        ranker = rlib.create_dictionary(runFiles)
 
+        fname = ""
+        if args.suffix:
+            fname = args.suffix + ".txt"
+        else:
+            fname = os.path.basename(dir) + "-feature.txt"
+
+        print("Filename = " + fname)
+
+        if args.normalizer:
+            rowlist = rlib.convert_dict_to_list(ranker, qrel)
+            df = rlib.create_data_frame(rowlist, len(runFiles))
+            rlib.normalize_data_frame(df, len(runFiles))
+            if (args.verbose):
+                print(df.head())
+            rlib.write_feature_file_normalized(df, len(runFiles), fname)
+        else:
+            rlib.write_feature_file_unnormalized(qrel, ranker, fname)
+
+        if args.ranklib:
+            rlib.run_rank_lib(args.ranklib, fname)
+            out = rlib.get_combined_run_dict("model.txt", fname)
+            rlib.create_combined_run_file(out)
 
