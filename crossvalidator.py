@@ -17,7 +17,7 @@ def read_dir_list(dirpath):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Takes unnormalized feature file and performs the normalization")
     parser.add_argument("-q", "--qrelpath", help="Path to the Qrel file", required=True)
-    parser.add_argument("-f", "--dirpath", help="Path to the Feature file", required=True)
+    parser.add_argument("-d", "--dirpath", help="Path to the Feature file", required=True)
     parser.add_argument("-v", "--verbose", help="Display information on the stdout", action="store_true")
     parser.add_argument("-s", "--suffix", help="Pass a filename suffix")
     parser.add_argument("-r", "--ranklib", help="Path to the RankLib jar")
@@ -36,7 +36,7 @@ if __name__ == '__main__':
         print(dir)
         print("Working on directory {}".format(dir))
         runFiles = rlib.getFileList(dir)
-        print(runFiles,len(runFiles))
+        print(runFiles, len(runFiles))
         ranker = rlib.create_dictionary(runFiles)
 
         fname = ""
@@ -61,4 +61,3 @@ if __name__ == '__main__':
             rlib.run_rank_lib(args.ranklib, fname)
             out = rlib.get_combined_run_dict("model.txt", fname)
             rlib.create_combined_run_file(out)
-
