@@ -68,10 +68,12 @@ def write_feature_file_normalized(df, number_of_fet, fname_suffix):
     fetlist = get_fet_col(number_of_fet)
     zcorelist = [fet + "_zscore" for fet in fetlist]
     count = 0
+    rowval = None
     with open(fname_suffix, 'w') as f:
         for index, row in df.iterrows():
-            count = count + 1
             binaryval = str(row['isrel']) + " "
+            if row['qid'] != rowval:
+                count = count + 1
             qid = "qid:" + str(count) + " "
             subcount = itertools.count(1)
             scoreslist = [str(next(subcount)) + ":" + str(row[fet]) + " " for fet in zcorelist]
@@ -83,6 +85,7 @@ def write_feature_file_normalized(df, number_of_fet, fname_suffix):
             if verbose:
                 print(".")
             f.write(line)
+            rowval = row['qid']
 
 
 '''
