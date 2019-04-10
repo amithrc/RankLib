@@ -313,6 +313,7 @@ def get_combined_run_dict(modelfile, fetfile):
     check_for_file(modelfile, fetfile)
     combined_dict = dict()
     weights = get_weights(modelfile)
+    print("The weight vector is {}".format(weights))
 
     with open(fetfile, 'r') as f:
         for line in f:
@@ -385,6 +386,7 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--suffix", help="Pass a filename suffix")
     parser.add_argument("-r", "--ranklib", help="Path to the RankLib jar")
     parser.add_argument("-n", "--normalize", help="Perform Z score normalize on the data", action="store_true")
+    parser.add_argument("-m", "--modelfile", help="Pass model file, this is for the test set")
 
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
 
@@ -426,5 +428,9 @@ if __name__ == '__main__':
 
     if args.ranklib:
         run_rank_lib(args.ranklib, fname)
+        out = get_combined_run_dict("model.txt", fname)
+        create_combined_run_file(out)
+
+    if args.modelfile:
         out = get_combined_run_dict("model.txt", fname)
         create_combined_run_file(out)
