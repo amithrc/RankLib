@@ -6,7 +6,7 @@ Create the ranklib by taking the Run files directory as input with Ground truth 
 
 ```
 usage: RankLib File Formatter [-h] -q QRELPATH -d DIRPATH [-v] [-s SUFFIX]
-                              [-r RANKLIB] [-n]
+                              [-r RANKLIB] [-n] [-m MODELFILE]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -18,13 +18,21 @@ optional arguments:
   -s SUFFIX, --suffix SUFFIX
                         Pass a filename suffix
   -r RANKLIB, --ranklib RANKLIB
-                        Pass a filename suffix
-  -n, --normalize       Perform Z score normalize on the each feature
+                        Path to the RankLib jar
+  -n, --normalize       Perform Z score normalize on the data
+  -m MODELFILE, --modelfile MODELFILE
+                        Pass model file, this is for the test set
 ```
 Example command line argument
 
 ```
 --qrelpath  D:\test200-train\train.pages.cbor-article.qrels --dirpath D:\test --ranklib D:\RankLib\RankLib-2.10.jar -n
+```
+Once you have the model file trained on the Train run files,the same program can be used to use this model file on the test run files by ignoring the --ranklib option and passing in the --modelfile option.
+
+Example command line argument
+```
+--qrelpath  D:\test200-train\train.pages.cbor-article.qrels --dirpath D:\test -n --modelfile model.txt
 ```
 # Normalizer
 
