@@ -381,12 +381,15 @@ def normalize_data_frame(frame, number_of_fet):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("RankLib File Formatter")
     parser.add_argument("-q", "--qrelpath", help="Path to the Qrel file", required=True)
-    parser.add_argument("-d", "--dirpath", help="Path to the Qrel file", required=True)
+    # parser.add_argument("-d", "--dirpath", help="Path to the Qrel file", required=True)
+    parser.add_argument("-d", "--dirpath", nargs='+', help="Path to the Qrel file", required=True)
     parser.add_argument("-v", "--verbose", help="Display information on the stdout", action="store_true")
     parser.add_argument("-s", "--suffix", help="Pass a filename suffix")
     parser.add_argument("-r", "--ranklib", help="Path to the RankLib jar")
     parser.add_argument("-n", "--normalize", help="Perform Z score normalize on the data", action="store_true")
     parser.add_argument("-m", "--modelfile", help="Pass model file, this is for the test set")
+    parser.add_argument('--runs', nargs='+',
+                        help="List the run files to be used In-order, Same list needs to be preserved for both train and test")
 
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
 
@@ -397,7 +400,8 @@ if __name__ == '__main__':
         Qrel = readQrel(args.qrelpath)
 
     if args.dirpath:
-        runFiles = getFileList(args.dirpath)
+        # runFiles = getFileList(args.dirpath)
+        runFiles = args.dirpath
 
     if args.verbose:
         verbose = True
