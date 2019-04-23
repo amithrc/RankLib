@@ -381,7 +381,7 @@ def normalize_data_frame(frame, number_of_fet):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("RankLib File Formatter")
     parser.add_argument("-q", "--qrelpath", help="Path to the Qrel file", required=True)
-    parser.add_argument("-d", "--dirpath", nargs='+', help="Path to the Qrel file", required=True)
+    parser.add_argument("-d", "--dirpath", nargs='+', help="Path to the Qrel file",required=True)
     parser.add_argument("-v", "--verbose", help="Display information on the stdout", action="store_true")
     parser.add_argument("-s", "--suffix", help="Pass a filename suffix")
     parser.add_argument("-r", "--ranklib", help="Path to the RankLib jar")
