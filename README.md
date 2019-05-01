@@ -5,14 +5,15 @@ Create the ranklib by taking the Run files directory as input with Ground truth 
 # CommandLine options
 
 ```
-usage: RankLib File Formatter [-h] -q QRELPATH -d DIRPATH [-v] [-s SUFFIX]
-                              [-r RANKLIB] [-n] [-m MODELFILE]
+usage: RankLib File Formatter [-h] -q QRELPATH [-d DIRPATH [DIRPATH ...]] [-v]
+                              [-s SUFFIX] [-r RANKLIB] [-n] [-m MODELFILE]
+                              [-dir RUNDIR]
 
 optional arguments:
   -h, --help            show this help message and exit
   -q QRELPATH, --qrelpath QRELPATH
                         Path to the Qrel file
-  -d DIRPATH, --dirpath DIRPATH
+  -d DIRPATH [DIRPATH ...], --dirpath DIRPATH [DIRPATH ...]
                         Path to the Qrel file
   -v, --verbose         Display information on the stdout
   -s SUFFIX, --suffix SUFFIX
@@ -22,12 +23,20 @@ optional arguments:
   -n, --normalize       Perform Z score normalize on the data
   -m MODELFILE, --modelfile MODELFILE
                         Pass model file, this is for the test set
+  -dir RUNDIR, --rundir RUNDIR
+                        pass the runfile directory, it will sort the files
 ```
-Example command line argument
+Example command line argument, using the --rundir option reads the file from the directory and sorts it.
 
 ```
---qrelpath  D:\test200-train\train.pages.cbor-article.qrels --dirpath D:\test --ranklib D:\RankLib\RankLib-2.10.jar -n
+--qrelpath  D:\test200-train\train.pages.cbor-article.qrels --runir D:\test --ranklib D:\RankLib\RankLib-2.10.jar -n
 ```
+If you want to pass the file as the list of arguments, example, --dirpath fet1 fet2 fet3 .... fetn, use the below command
+
+```
+--qrelpath  D:\test200-train\train.pages.cbor-article.qrels --dirpath fet1 fet2 fet3 --ranklib D:\RankLib\RankLib-2.10.jar -n
+```
+
 Once you have the model file trained on the Train run files,the same program can be used to use this model file on the test run files by ignoring the --ranklib option and passing in the --modelfile option.
 
 Example command line argument
