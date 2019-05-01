@@ -241,7 +241,7 @@ Read the file names in to list
 def getFileList(path):
     # return [os.path.join(path, file) for file in os.listdir(path) if os.path.isdir(file)]
     filelist = list()
-    for file in os.listdir(path):
+    for file in sorted(os.listdir(path)):
         absolute_path = os.path.join(path, file)
         if os.path.isdir(absolute_path):
             continue
@@ -381,12 +381,13 @@ def normalize_data_frame(frame, number_of_fet):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("RankLib File Formatter")
     parser.add_argument("-q", "--qrelpath", help="Path to the Qrel file", required=True)
-    parser.add_argument("-d", "--dirpath", nargs='+', help="Path to the Qrel file",required=True)
+    parser.add_argument("-d", "--dirpath", nargs='+', help="Path to the Qrel file")
     parser.add_argument("-v", "--verbose", help="Display information on the stdout", action="store_true")
     parser.add_argument("-s", "--suffix", help="Pass a filename suffix")
     parser.add_argument("-r", "--ranklib", help="Path to the RankLib jar")
     parser.add_argument("-n", "--normalize", help="Perform Z score normalize on the data", action="store_true")
     parser.add_argument("-m", "--modelfile", help="Pass model file, this is for the test set")
+    parser.add_argument("-dir", "--rundir", help="pass the runfile directory, it will sort the files")
 
     args = parser.parse_args(args=None if sys.argv[1:] else ['--help'])
 
@@ -398,6 +399,10 @@ if __name__ == '__main__':
 
     if args.dirpath:
         runFiles = args.dirpath
+    elif args.rundir:
+        runFiles = getFileList(args.rundir)
+    else:
+        print("Please either use dirpath or rundir option to provide runfile inputs")
 
     if args.verbose:
         verbose = True
